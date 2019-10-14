@@ -17,52 +17,49 @@ degre45=(5, -5)
 degre135=(5, 5)
 degre225=(-5, 5)
 degre315=(-5, -5)
-mouvd=randint(1, 8)
-def bouger_balle(mouv):
+mouvd= {
+    'dir': randint(1, 8)
+}
+def bouger_balle(mouvd):
+    mouv = mouvd['dir']
     try:
-        print (c.coords(balle))
         if mouv == 1:
-            c.move(balle, 0, -10)
+            c.move(balle, 5, -5)
         elif mouv == 2:
             c.move(balle, 5, -5)
         elif mouv == 3:
-            c.move(balle, 10, 0)
+            c.move(balle, 5, 5)
         elif mouv == 4:
             c.move(balle, 5, 5)
         elif mouv == 5:
-            c.move(balle, 0, 10)
+            c.move(balle, -5, 5)
         elif mouv == 6:
             c.move(balle, -5, 5)
-        elif mouv ==7:
-            c.move(balle, -10, 0)
+        elif mouv == 7:
+            c.move(balle, -5, -5)
         elif mouv == 8:
             c.move(balle, -5, -5)
         else:
             raise ValueError
         if c.coords(balle)[0] == 0 or c.coords(balle)[1] == 0 or c.coords(balle)[2] == 500 or c.coords(balle)[3] == 500:
-            print(mouv)
-            if mouv == 1:
-                mouv=5
+            if mouv == 1 or mouv == 5:
+                mouv=(mouv+3) if mouv == 1 else (mouv-3)
             elif mouv == 2:
-                mouv=6
-            elif mouv == 3:
-                mouv=7
-            elif mouv == 4:
                 mouv=8
-            elif mouv == 5:
-                mouv=1
-            elif mouv == 6:
-                mouv=2
-            elif mouv == 7:
-                mouv=3
-            elif mouv == 8:
-                mouv=4
-            print(mouv)
-    except ValueError as n:
-        print(n)
+            elif mouv < 7:
+                mouv=mouv-2
+            elif mouv == 8 or mouv == 7:
+                mouv=mouv-2
+            else:
+                mouv=mouv+2
+            mouvd['dir'] = mouv
+    except ValueError:
+        print('', end='')
+    fenetre.after(50, lambda: bouger_balle(mouvd))
+
 balle=c.create_oval(200, 300, 300, 400, fill='blue', outline='blue')
 rect=c.create_rectangle(200, 450, 300, 462, fill='black')
-bouger_balle(mouvd)
-fenetre.after(0, bouger_balle(mouvd))
+#bouger_balle(mouvd)
+fenetre.after(0, lambda: bouger_balle(mouvd))
 fenetre.bind('<Motion>', motion)
 fenetre.mainloop()
