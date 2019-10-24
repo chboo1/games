@@ -26,7 +26,7 @@ class Direction(Enum):
 
 class Mur(Enum):
     DROITE = 1
-    BAS = -2
+    BAS = 0
     GAUCHE = -1
     HAUT = 2
     PLAT = -2
@@ -44,7 +44,13 @@ class Bong():
         self.balle = self.c.create_oval(200, 300, 300, 400,
                                         fill='blue', outline='blue')
         self.root.after(1000, self.pt)
-        self.rect = self.c.create_rectangle(200, 450, 300, 462, fill='black')
+        self.platform_x = (200, 300)
+        self.platform_y = (450, 462)
+        self.rect = self.c.create_rectangle(self.platform_x[0],
+                                            self.platform_y[0],
+                                            self.platform_x[1],
+                                            self.platform_y[1],
+                                            fill='black')
         self.root.bind('<Motion>', self.motion)
         self.root.bind('<Return>', self.kr)
         self.dir = Direction(randint(1, 4))
@@ -56,14 +62,18 @@ class Bong():
         self.coin2 = self.c.create_oval(14, 9, 16, 21,
                                          fill='white', outline='white')
         self.coin3 = self.c.create_oval(9, 4, 21, 26)
-# end
 
     def motion(self, event):
         # begin
         self.x, self.y = event.x, event.y
         firstx = self.x-50
         secondx = self.x+50
-        self.c.coords(self.rect, firstx, 450, secondx, 462)
+        self.platform_x = (firstx, secondx)
+        self.c.coords(self.rect,
+                      firstx, self.platform_y[0],
+                      secondx, self.platform_y[1])
+        self.liste_bin = []
+# end
 
     def pt(self):
         print(int(time())-int(self.start))
@@ -84,27 +94,34 @@ class Bong():
         self.root.destroy()
         # e
 
+    def touche_platforme(self, coords):
+        x1, y1, x2, y2 = map(int, coords)
+        if y2 < self.platform_y[0]:
+            return False
+
+        milieu = (x1 + x2) / 2
+        if milieu < self.platform_x[0] or milieu > self.platform_x[1]:
+            return False
+
+        return True
+
     def quel_mur(self, coords):
         # b
         self.coords = coords
-        if self.coords[0] == 0.0:
+        if self.coords[0] <= 0.0:
             return Mur.GAUCHE
-        elif self.coords[1] == 0.0:
+        elif self.coords[1] <= 0.0:
             return Mur.HAUT
-        elif self.coords[2] == self.width:
+        elif self.coords[2] >= self.width:
             return Mur.DROITE
-        elif self.coords[3] == self.height:
+        elif self.coords[3] >= self.height:
             return Mur.BAS
-        elif self.coords[0]+50 in [self.x-13, self.x-12, self.x-11,
-                                    self.x-10, self.x-9, self.x-8, self.x-7, self.x-6, self.x-5, self.x-4, self.x-3, self.x-2, self.x-1, self.x,
-                                     self.x+13] and self.coords[3] == 462:
-            print('...')
+        elif self.touche_platforme(coords):
             return Mur.PLAT
         # e
 
     def bouger_balle(self):
         # b
-        print(self.x-13, self.x+13)
         mouv_x = 5 if self.mouv.droite() else -5
         mouv_y = -5 if self.mouv.haut() else 5
         self.c.move(self.balle, mouv_x, mouv_y)
@@ -117,7 +134,6 @@ class Bong():
             self.root.after(50, self.bouger_balle)
         else:
             self.root.destroy()
-            print(range(self.x-13, self.x+13))
             print(coords)
 # e
     def main(self):
