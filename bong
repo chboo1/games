@@ -1,0 +1,3 @@
+#!/bin/bash
+clear
+python3 ~/github/games/bong.py
