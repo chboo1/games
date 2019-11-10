@@ -1,7 +1,7 @@
-from tkinter import Canvas, Tk
+from tkinter import Canvas, Tk, Button
 from random import randint
 from enum import Enum
-from time import time
+from time import time, sleep
 
 
 class Direction(Enum):
@@ -31,6 +31,10 @@ class Mur(Enum):
     PLAT = -2
 
 
+def start():
+    jeu.main(800, 500)
+
+
 class Bong():
 
     def __init__(self, width, height):
@@ -40,28 +44,18 @@ class Bong():
         self.root = Tk()
         self.root.title('Bong')
         self.c = Canvas(self.root, width=width, height=height)
-        self.balle = self.c.create_oval((width/2)-50, 200, (width/2)+50, 300,
-                                        fill='blue', outline='blue')
-        self.root.after(1000, self.pt)
-        self.platform_x = ((width/2)-12, (width/2)+13)
-        self.platform_y = (450, 462)
-        self.rect = self.c.create_rectangle(self.platform_x[0],
-                                            self.platform_y[0],
-                                            self.platform_x[1],
-                                            self.platform_y[1],
-                                            fill='black')
-        self.root.bind('<Motion>', self.motion)
         self.root.bind('<Return>', self.kr)
+        self.root.bind('<space>', self.space)
         self.dir = Direction(randint(1, 4))
         self.mouv = self.dir
         self.c.pack()
         self.start = time()
-        self.coin = self.c.create_oval(10, 5, 20, 25,
-                                       fill='yellow', outline='yellow')
-        self.coin2 = self.c.create_oval(14, 9, 16, 21,
-                                        fill='white', outline='white')
-        self.coin3 = self.c.create_oval(9, 4, 21, 26)
         self.freeze = None
+        self.but = Button(self.root, text='PLAY', command=self.main)
+        self.but.pack()
+        self.but2 = None
+        self.root.mainloop()
+        # end
 
     def motion(self, event):
         # begin
@@ -75,20 +69,25 @@ class Bong():
         self.liste_bin = []
 # end
 
-    def pt(self):
-        # print(int(time())-int(self.start))
-        self.root.after(1000, self.pt)
-        # end
+    def space(self, event):
+        self.freeze = True
+        self.root.unbind('<space>')
+        sleep(0.1)
+        self.root.bind('<space>', self.unspace)
+        self.c.itemconfig(self.txt, text='Paused.')
+        self.but2 = Button(self.root, text='Quit', command=self.kr)
+        self.but2.pack()
 
-# degre90=(10, 0)
-# degre270=(-10, 0)
-# degre0=(0, -10)
-# degre180=(0, 10)
-# degre45=(5, -5)
-# degre135=(5, 5)
-# degre225=(-5, 5)
-# degre315=(-5, -5)
-    def kr(self, event):
+    def unspace(self, event):
+        self.freeze = False
+        self.root.after(0, self.bouger_balle)
+        self.root.unbind('<space>')
+        sleep(0.1)
+        self.root.bind('<space>', self.space)
+        self.c.itemconfig(self.txt, text='Space to pause.')
+        self.but2.destroy()
+
+    def kr(self, event=None):
         # b
         self.start = time()
         self.root.destroy()
@@ -131,28 +130,46 @@ class Bong():
                 mouv_x = 5 if self.mouv.droite() else -5
                 mouv_y = -5 if self.mouv.haut() else 5
                 self.c.move(self.balle, mouv_x, mouv_y)
-
                 coords = self.c.coords(self.balle)
                 murs = self.quel_mur(coords)
                 if murs:
                     nouv_dir = sum([mur.value for mur in murs])
                     self.mouv = Direction(self.mouv.value + nouv_dir)
                 if murs == [Mur.BAS]:
-                    self.kr('hello')
+                    raise ZeroDivisionError
                 else:
                     self.root.after(10, self.bouger_balle)
 
             except ValueError:
-                print('', end='')
                 self.root.after(10, self.bouger_balle)
+            except ZeroDivisionError:
+                self.c.delete(self.balle)
+                self.c.delete(self.rect)
+                self.c.delete(self.txt)
+                self.but = Button(self.root, text='PLAY', command=self.main)
+                self.but.pack()
 # e
     def main(self):
 
         # b
+        self.root.quit()
         self.root.after(2000, self.bouger_balle)
+        self.but.destroy()
+        self.root.bind('<Motion>', self.motion)
+        self.balle = self.c.create_oval((self.width/2)-50, 200, (self.width/2)
+                                        + 50, 300,
+                                        fill='blue', outline='blue')
+        self.platform_x = ((self.width/2)-12, (self.width/2)+13)
+        self.platform_y = (450, 462)
+        self.txt = self.c.create_text(400, 10,
+                        font=('Helvetica', 18), text='Space to pause.')
+        self.rect = self.c.create_rectangle(self.platform_x[0],
+                                            self.platform_y[0],
+                                            self.platform_x[1],
+                                            self.platform_y[1],
+                                            fill='black')
         self.root.mainloop()
         # e
 
 
 jeu = Bong(800, 500)
-jeu.main()
